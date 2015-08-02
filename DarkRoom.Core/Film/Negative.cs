@@ -11,9 +11,10 @@ using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Film
 {
+    [Serializable]
     public class Negative
     {
-        private Image _image;
+        internal Image _image;
         private string _ParseExtension(string path)
         {
             string extension = path.Split('.').LastOrDefault();
@@ -74,7 +75,7 @@ namespace DarkRoom.Core.Film
             }
             catch (Exception ex)
             {
-                throw new Exception(string.Format("Unknown image format '{0}' please use a known image format.", extension));
+                throw new Exception(string.Format("Unknown image format '{0}' please use a known image format.", extension), ex);
             }
         }
 
@@ -109,6 +110,66 @@ namespace DarkRoom.Core.Film
             {
                 return _image.Height;
             }
+        }
+
+        public static bool operator == (Negative left, Negative right)
+        {
+            if (left.Equals(right))
+                return true;
+
+            Bitmap source = (Bitmap)left._image,
+                   target = (Bitmap)right._image;
+
+            const int pixelSize = 4; // 32 bits per pixel
+
+            BitmapData sourceData = null, 
+                       targetData = null;
+            unsafe
+            {
+                try
+                {
+                    sourceData = source.LockBits(
+                      new Rectangle(0, 0, source.Width, source.Height),
+                      ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+                    targetData = target.LockBits(
+                      new Rectangle(0, 0, target.Width, target.Height),
+                      ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+                    for (int y = 0; y < source.Height; ++y)
+                    {
+                        byte* sourceRow = (byte*)sourceData.Scan0 + (y * sourceData.Stride);
+                        byte* targetRow = (byte*)targetData.Scan0 + (y * targetData.Stride);
+
+                        for (int x = 0; x < source.Width; ++x)
+                        {
+                            if (targetRow[x * pixelSize + 0] != sourceRow[x * pixelSize + 0])
+                                return false;
+                            if (targetRow[x * pixelSize + 1] != sourceRow[x * pixelSize + 1])
+                                return false;
+                            if (targetRow[x * pixelSize + 2] != sourceRow[x * pixelSize + 2])
+                                return false;
+                            if (targetRow[x * pixelSize + 3] != sourceRow[x * pixelSize + 3])
+                                return false;
+                        }
+                    }
+                }
+                finally
+                {
+                    if (sourceData != null)
+                        source.UnlockBits(sourceData);
+
+                    if (targetData != null)
+                        target.UnlockBits(targetData);
+                }
+            }
+
+            return true;
+        }
+
+        public static bool operator !=(Negative left, Negative right)
+        {
+            return !(left == right);
         }
     }
 }
