@@ -250,6 +250,36 @@ namespace DarkRoom.Core
             return this;
         }
 
+        public Darkroom Noise(double value)
+        {
+            var rng = new Random(Environment.TickCount);
+
+            _image = _ProcessPixels(_image, (Pixel pixel) => {
+                var randomValue = rng.NextDouble() * value * 2.55;
+                randomValue = (rng.NextDouble() > 0.5 ? -randomValue : randomValue);
+                pixel.R = Clamp(pixel.R + randomValue);
+                pixel.B = Clamp(pixel.B + randomValue);
+                pixel.G = Clamp(pixel.G + randomValue);
+                return pixel;
+            });
+
+            return this;
+        }
+
+        public Darkroom Sepia(double value = 100)
+        {
+            value /= 100;
+
+            _image = _ProcessPixels(_image, (pixel) => {
+                pixel.R = Clamp((pixel.R * (1 - (0.607 * value))) + (pixel.G * (0.769 * value)) + (pixel.B * (0.189 * value)));
+                pixel.G = Clamp((pixel.R * (0.349 * value)) + (pixel.G * (1 - (0.314 * value))) + (pixel.B * (0.168 * value)));
+                pixel.B = Clamp((pixel.R * (0.272 * value)) + (pixel.G * (0.534 * value)) + (pixel.B * (1 - (0.869 * value))));
+                return pixel;
+            });
+
+            return this;
+        }
+
         public Negative Wash()
         {
             return _internal;
