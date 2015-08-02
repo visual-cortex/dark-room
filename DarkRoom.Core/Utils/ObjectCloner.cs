@@ -14,7 +14,7 @@ namespace DarkRoom.Core.Utils
     /// Provides a method for performing a deep copy of an object.
     /// Binary Serialization is used to perform the copy.
     /// </summary>
-    public static class ObjectCloner
+    internal static class ObjectCloner
     {
         /// <summary>
         /// Perform a deep Copy of the object.
@@ -22,7 +22,7 @@ namespace DarkRoom.Core.Utils
         /// <typeparam name="T">The type of object being copied.</typeparam>
         /// <param name="source">The object instance to copy.</param>
         /// <returns>The copied object.</returns>
-        public static T Clone<T>(this T source)
+        internal static T Clone<T>(this T source)
         {
             if (!typeof(T).IsSerializable)
             {

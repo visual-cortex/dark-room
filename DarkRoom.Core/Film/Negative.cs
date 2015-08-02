@@ -1,4 +1,5 @@
 ﻿using DarkRoom.Core.Enums;
+using DarkRoom.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -15,21 +16,7 @@ namespace DarkRoom.Core.Film
     public class Negative
     {
         internal Image _image;
-        private string _ParseExtension(string path)
-        {
-            string extension = path.Split('.').LastOrDefault();
-
-            if (string.IsNullOrWhiteSpace(extension))
-                throw new Exception("Image file extension is required in order to infer the saved format required. Please specify the image format manually if the desired image needs to be saved without a file extension.");
-
-            extension = extension.Trim().ToLower();
-
-            var charArray = extension.ToCharArray();
-
-            charArray[0] = (char)(extension[0] - 32);
-
-            return new string(charArray);
-        }
+ 
         private static Bitmap _LoadUri(Uri path)
         {
             try
@@ -67,7 +54,7 @@ namespace DarkRoom.Core.Film
 
         public void Develop(string path, int width = 0, int height = 0)
         {
-            string extension = _ParseExtension(path);
+            string extension = ExtensionHelper.Normalize(path.Split('.').Last());
             try
             {
                 Format format = (Format)Enum.Parse(typeof(Format), extension);
@@ -94,6 +81,19 @@ namespace DarkRoom.Core.Film
             if (width == 0 && height == 0)
                 _image.Save(path, imageFormat);
             else _image.GetThumbnailImage(width, height, null, IntPtr.Zero).Save(path, imageFormat);
+        }
+
+        public DataUri Digitize()
+        {
+            MemoryStream ms = new MemoryStream();
+            _image.Save(ms, ImageFormat.Png);
+            byte[] byteImage = ms.ToArray();
+
+            return new DataUri()
+            {
+                Data = Convert.ToBase64String(byteImage),
+                Mime = Format.Png
+            };
         }
 
         public int Width
@@ -170,6 +170,16 @@ namespace DarkRoom.Core.Film
         public static bool operator !=(Negative left, Negative right)
         {
             return !(left == right);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this == (Negative)obj;
+        }
+
+        public override int GetHashCode()
+        {
+           return _image.GetHashCode();
         }
     }
 }
