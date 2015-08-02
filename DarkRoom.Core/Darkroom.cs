@@ -228,6 +228,28 @@ namespace DarkRoom.Core
             return this;
         }
 
+        public Darkroom Gammma(double value)
+        {
+            value = value < -100 ? -100 : value > 100 ? 100 : value;
+
+            if (value >= 0)
+                value = 1 - (value / 100);
+            else value /= -1;
+
+            byte[] gammaLookup = new byte[256];
+            for (int i = 0; i < 256; i++)
+                gammaLookup[i] = Clamp(Math.Pow((double)i / 255, value) * 255);
+
+            _image = _ProcessPixels(_image, (Pixel pixel) => {
+                pixel.R = gammaLookup[pixel.R];
+                pixel.G = gammaLookup[pixel.G];
+                pixel.B = gammaLookup[pixel.B];
+                return pixel;
+            });
+
+            return this;
+        }
+
         public Negative Wash()
         {
             return _internal;
