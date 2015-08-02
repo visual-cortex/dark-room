@@ -92,7 +92,8 @@ namespace DarkRoom.Core.Film
             return new DataUri()
             {
                 Data = Convert.ToBase64String(byteImage),
-                Mime = Format.Png
+                Mime = Format.Png,
+                Encoding = "base64"
             };
         }
 
