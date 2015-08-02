@@ -41,8 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DarkRoom.cs" />
     <Compile Include="Enums\Format.cs" />
-    <Compile Include="Models\Negative.cs" />
+    <Compile Include="Film\Negative.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
