@@ -20,7 +20,7 @@ namespace DarkRoom.Core.Utils
 
             charArray[0] = (char)(extension[0] - 32);
 
-            return new string(charArray);
+            return new string(charArray).Replace("Jpg", "Jpeg");
         }
     }
 }

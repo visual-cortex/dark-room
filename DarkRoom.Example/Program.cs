@@ -4,6 +4,7 @@ using System;
 using DarkRoom.Core.Utils;
 using DarkRoom.Core.Enums;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace DarkRoom.Example
 {
@@ -11,45 +12,27 @@ namespace DarkRoom.Example
     {
         static void Main(string[] args)
         {
-            Negative img = new Negative("sample.jpg"),
-                     image2 = new Negative("sample.jpg");
+            Stopwatch timer = Stopwatch.StartNew();
 
-            Darkroom editor = new Darkroom(img),
-                     editor2 = new Darkroom(image2);
+            Negative img = new Negative("sample.jpg", 1280);
 
-            
-            Task.Run(() => {
-                editor
-                    //.BlackAndWhite(BlackAndWhiteMode.Regular)
-                    //.Invert()
-                    //.Contrast(50)
-                    //.Brightness(10)
-            .Saturation(50)
-                    //.Vibrance(-50)
-                    //.Gammma(-50)
-                    //.Noise(25)
-                    //.Sepia()
-                    //.Hue(45)
-            .Wash()
-            .Develop(string.Format(@"{0}.png", Environment.TickCount));
-            });
+            Darkroom editor = new Darkroom(img);
 
-            Task.Run(() => {
-                editor2
-                    //.BlackAndWhite(BlackAndWhiteMode.Regular)
-                    //.Invert()
-                    //.Contrast(50)
-                    //.Brightness(10)
-             .Saturation(-50)
-                    //.Vibrance(-50)
-                    //.Gammma(-50)
-                    //.Noise(25)
-                    //.Sepia()
-                    //.Hue(45)
-             .Wash()
-             .Develop(string.Format(@"{0}.png", Environment.TickCount));
-            });
+            editor
+                .BlackAndWhite(BlackAndWhiteMode.Regular)
+                .Invert()
+                .Contrast(50)
+                .Brightness(10)
+                .Saturation(-50)
+                .Vibrance(-50)
+                .Gammma(-50)
+                .Noise(25)
+                .Sepia()
+                .Hue(45)
+                .Wash()
+                .Develop(string.Format(@"{0}.jpg", Environment.TickCount));
 
+            Console.WriteLine(timer.Elapsed.TotalSeconds);
             Console.ReadLine();
         }
     }

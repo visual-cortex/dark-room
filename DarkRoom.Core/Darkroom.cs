@@ -4,6 +4,7 @@ using DarkRoom.Core.Film.Colorspace;
 using DarkRoom.Core.Utils;
 using DarkRoom.Core.Utils.PixelManipulation;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 
@@ -11,8 +12,12 @@ namespace DarkRoom.Core
 {
     public class Darkroom
     {
-        Negative _original,
-                 _internal;
+        private Negative _original,
+                         _internal;
+
+        private List<Filter> appliedFilters = new List<Filter>();
+
+        private Guid Uuid;
 
         private Bitmap _image
         {
@@ -72,13 +77,15 @@ namespace DarkRoom.Core
         public Darkroom(Negative image)
         {
             _original = image;
+            Uuid = Guid.NewGuid();
             Reset();
         }
 
         public Darkroom BlackAndWhite(BlackAndWhiteMode mode = BlackAndWhiteMode.Regular)
         {
-            _ProcessPixels((pixel) => {
-                return pixel.BlackAndWhite(mode);
+            appliedFilters.Add(new Filter {
+                Name = Filters.BlackAndWhite,
+                Value = mode
             });
 
             return this;
@@ -86,18 +93,19 @@ namespace DarkRoom.Core
 
         public Darkroom Invert()
         {
-            _ProcessPixels((pixel) => {
-                return pixel.Invert();
+            appliedFilters.Add(new Filter() {
+                Name = Filters.Invert
             });
             return this;
         }
 
         public Darkroom Contrast(double value)
         {
-            FilterValue.Contrast = value;
+            var lookup = FilterValue.NormalizeContrast(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Contrast();
+            appliedFilters.Add(new Filter() {
+                Name = Filters.Contrast,
+                Value = lookup
             });
 
             return this;
@@ -105,10 +113,12 @@ namespace DarkRoom.Core
 
         public Darkroom Brightness(double value)
         {
-            FilterValue.Brightness = value;
+            value = FilterValue.NormalizeBrightness(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Brightness();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Brightness,
+                Value = value
             });
 
             return this;
@@ -116,10 +126,12 @@ namespace DarkRoom.Core
 
         public Darkroom Saturation(double value)
         {
-            FilterValue.Saturation = value;
+            var lookup = FilterValue.NormalizeSaturation(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Saturation();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Saturation,
+                Value = lookup
             });
 
             return this;
@@ -127,10 +139,12 @@ namespace DarkRoom.Core
 
         public Darkroom Vibrance(double value)
         {
-            FilterValue.Vibrance = value;
+            value = FilterValue.NormalizeVibrance(value);
 
-            _ProcessPixels((pixel) => {  
-                return pixel.Vibrance();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Vibrance,
+                Value = value
             });
 
             return this;
@@ -138,10 +152,12 @@ namespace DarkRoom.Core
 
         public Darkroom Gammma(double value)
         {
-            FilterValue.Gamma = value;
+            var lookup = FilterValue.NormalizeGamma(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Gamma();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Gamma,
+                Value = lookup
             });
 
             return this;
@@ -149,10 +165,12 @@ namespace DarkRoom.Core
 
         public Darkroom Noise(double value)
         {
-            FilterValue.Noise = value;
+            value = FilterValue.NormalizeNoise(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Noise();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Noise,
+                Value = value
             });
 
             return this;
@@ -160,10 +178,12 @@ namespace DarkRoom.Core
 
         public Darkroom Sepia(double value = 100)
         {
-            FilterValue.Sepia = value;
+            value = FilterValue.NormalizeSepia(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Sepia();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Sepia,
+                Value = value
             });
 
             return this;
@@ -171,19 +191,17 @@ namespace DarkRoom.Core
 
         public Darkroom Hue(double value)
         {
-            FilterValue.Hue = value;
+            value = FilterValue.NormalizeHue(value);
 
-            _ProcessPixels((pixel) => {
-                return pixel.Hue();
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Hue,
+                Value = value
             });
 
             return this;
         }
 
-        /* TO-DO 
-         * 
-         * Separate processing logic.
-         */
         public Darkroom Tint(string hex)
         {
             return Tint(new HexColor(hex));
@@ -203,29 +221,10 @@ namespace DarkRoom.Core
 
         public Darkroom Tint(HexColor color)
         {
-            _ProcessPixels((pixel) => {
-                pixel.B = PixelHelper.Clamp((pixel.B + (255 - pixel.B) * ((double)color.Pixel.B / 255)));
-                pixel.R = PixelHelper.Clamp((pixel.R + (255 - pixel.R) * ((double)color.Pixel.R / 255)));
-                pixel.G = PixelHelper.Clamp((pixel.G + (255 - pixel.G) * ((double)color.Pixel.G / 255)));
-                return pixel;
-            });
-            return this;
-        }
-
-        public Darkroom Pixelate(int size)
-        {
-            PixelRgb currentPixel = null;
-            int currentPosition = 0;
-
-            _ProcessPixels((pixel) => {
-                if (currentPosition == 0 || currentPosition % size == 0)
-                {
-                    currentPixel = pixel;
-                }
-
-                currentPosition++;
-
-                return currentPixel;
+            appliedFilters.Add(new Filter()
+            {
+                Name = Filters.Tint,
+                Value = color
             });
 
             return this;
@@ -233,7 +232,65 @@ namespace DarkRoom.Core
 
         public Negative Wash()
         {
+            ApplyFilters();
             return _internal;
+        }
+
+        private void ApplyFilters()
+        {
+            _ProcessPixels((pixel) => {
+                foreach(var filter in appliedFilters)
+                {
+                    switch (filter.Name)
+                    {
+                        case Filters.BlackAndWhite:
+                            pixel.BlackAndWhite((BlackAndWhiteMode)filter.Value);
+                            break;
+
+                        case Filters.Brightness:
+                            pixel.Brightness((double)filter.Value);
+                            break;
+
+                        case Filters.Contrast:
+                            pixel.Contrast((byte[])filter.Value);
+                            break;
+
+                        case Filters.Gamma:
+                            pixel.Gamma((byte[])filter.Value);
+                            break;
+
+                        case Filters.Hue:
+                            pixel.Hue((double)filter.Value);
+                            break;
+
+                        case Filters.Invert:
+                            pixel.Invert();
+                            break;
+
+                        case Filters.Noise:
+                            pixel.Noise((double)filter.Value);
+                            break;
+
+                        case Filters.Saturation:
+                            pixel.Saturation((double[])filter.Value);
+                            break;
+
+                        case Filters.Sepia:
+                            pixel.Sepia((double)filter.Value);
+                            break;
+
+                        case Filters.Tint:
+                            pixel.Tint((HexColor)filter.Value);
+                            break;
+
+                        case Filters.Vibrance:
+                            pixel.Vibrance((double)filter.Value);
+                            break;
+                    }
+                }
+
+                return pixel;
+            });
         }
        
         public void Reset()
