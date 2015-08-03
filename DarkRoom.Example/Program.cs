@@ -26,7 +26,7 @@ namespace DarkRoom.Example
            //.Gammma(-5)
            //.Sepia()
            //.Noise(15)
-           .Hue(80)
+           .Tint("#2980b9")
            .Wash()
            .Develop(string.Format(@"{0}.png", Environment.TickCount), height: 640);
         }

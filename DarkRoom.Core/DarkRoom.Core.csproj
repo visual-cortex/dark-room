@@ -47,6 +47,7 @@
     <Compile Include="Enums\BlackAndWhiteMode.cs" />
     <Compile Include="Enums\Format.cs" />
     <Compile Include="Film\DataUri.cs" />
+    <Compile Include="Film\HexColor.cs" />
     <Compile Include="Film\HsvPixel.cs" />
     <Compile Include="Film\Negative.cs" />
     <Compile Include="Film\RgbPixel.cs" />

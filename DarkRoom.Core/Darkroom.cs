@@ -300,11 +300,39 @@ namespace DarkRoom.Core
             return this;
         }
 
+        public Darkroom Tint(string hex)
+        {
+            return Tint(new HexColor(hex));
+        }
+
+        public Darkroom Tint(byte red, byte green, byte blue)
+        {
+            string hex = string.Format("#{0}{1}{2}", red.ToString("X2"), green.ToString("X2"), blue.ToString("X2"));
+            return Tint(hex);
+        }
+
+        public Darkroom Tint(Color color)
+        {
+            string hex = string.Format("#{0}{1}{2}", color.R.ToString("X2"), color.G.ToString("X2"), color.B.ToString("X2"));
+            return Tint(hex);
+        }
+
+        public Darkroom Tint(HexColor color)
+        {
+            _image = _ProcessPixels(_image, (pixel) => {
+                pixel.B = Clamp((pixel.B + (255 - pixel.B) * ((double)color.Pixel.B / 255)));
+                pixel.R = Clamp((pixel.R + (255 - pixel.R) * ((double)color.Pixel.R / 255)));
+                pixel.G = Clamp((pixel.G + (255 - pixel.G) * ((double)color.Pixel.G / 255)));
+                return pixel;
+            });
+            return this;
+        }
+
         public Negative Wash()
         {
             return _internal;
         }
-
+       
         public void Reset()
         {
             _internal = _original.Clone();
