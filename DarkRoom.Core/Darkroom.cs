@@ -29,33 +29,25 @@ namespace DarkRoom.Core
             }
         }
 
-        private static Bitmap _ProcessPixels(Bitmap source, Func<PixelRgb, PixelRgb>  filterLogic)
+        private void _ProcessPixels(Func<PixelRgb, PixelRgb>  filterLogic)
         {
-            const int pixelSize = 4; // 32 bits per pixel
-            Bitmap target = new Bitmap(
-            source.Width,
-            source.Height,
-            PixelFormat.Format32bppArgb);
+            // 32 bits per pixel
+            const int pixelSize = 4; 
 
-            BitmapData sourceData = null, targetData = null;
+            BitmapData sourceData = null;
             unsafe
             {
                 try
                 {
-                    sourceData = source.LockBits(
-                      new Rectangle(0, 0, source.Width, source.Height),
-                      ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                    sourceData = _image.LockBits(
+                      new Rectangle(0, 0, _image.Width, _image.Height),
+                      ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-                    targetData = target.LockBits(
-                      new Rectangle(0, 0, target.Width, target.Height),
-                      ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-
-                    for (int y = 0; y < source.Height; ++y)
+                    for (int y = 0; y < _image.Height; ++y)
                     {
                         byte* sourceRow = (byte*)sourceData.Scan0 + (y * sourceData.Stride);
-                        byte* targetRow = (byte*)targetData.Scan0 + (y * targetData.Stride);
 
-                        for (int x = 0; x < source.Width; ++x)
+                        for (int x = 0; x < _image.Width; ++x)
                         {
                             var alteredPixel = filterLogic(new PixelRgb()
                             {
@@ -65,24 +57,19 @@ namespace DarkRoom.Core
                                 A = sourceRow[x * pixelSize + 3]
                             });
 
-                            targetRow[x * pixelSize + 0] = alteredPixel.B;
-                            targetRow[x * pixelSize + 1] = alteredPixel.G;
-                            targetRow[x * pixelSize + 2] = alteredPixel.R;
-                            targetRow[x * pixelSize + 3] = alteredPixel.A;
+                            sourceRow[x * pixelSize + 0] = alteredPixel.B;
+                            sourceRow[x * pixelSize + 1] = alteredPixel.G;
+                            sourceRow[x * pixelSize + 2] = alteredPixel.R;
+                            sourceRow[x * pixelSize + 3] = alteredPixel.A;
                         }
                     }
                 }
                 finally
                 {
                     if (sourceData != null)
-                        source.UnlockBits(sourceData);
-
-                    if (targetData != null)
-                        target.UnlockBits(targetData);
+                        _image.UnlockBits(sourceData);
                 }
             }
-
-            return target;
         }
 
         private static byte Clamp(double pValue)
@@ -106,7 +93,7 @@ namespace DarkRoom.Core
                 case BlackAndWhiteMode.Green: ratio = new double[] { 0, 1, 0 }; break;
                 case BlackAndWhiteMode.Blue: ratio = new double[] { 0, 0, 1 }; break;
             }
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 byte result = (byte)(pixel.R * ratio[0] + pixel.G * ratio[1] + pixel.B * ratio[2]);
                 pixel.R = result;
                 pixel.G = result;
@@ -119,7 +106,7 @@ namespace DarkRoom.Core
 
         public Darkroom Invert()
         {
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 pixel.R = (byte)(255 ^ pixel.R);
                 pixel.G = (byte)(255 ^ pixel.G);
                 pixel.B = (byte)(255 ^ pixel.B);
@@ -154,7 +141,7 @@ namespace DarkRoom.Core
                 contrastLookup[i] = Clamp(pValue);
             }
 
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 pixel.R = contrastLookup[pixel.R];
                 pixel.G = contrastLookup[pixel.B];
                 pixel.B = contrastLookup[pixel.B];
@@ -172,7 +159,7 @@ namespace DarkRoom.Core
             value = Math.Floor(255 * (value / 100));
 
             double tempPixel;
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 tempPixel = pixel.R + value;
                 pixel.R = Clamp(tempPixel);
                 tempPixel = pixel.G + value;
@@ -199,7 +186,7 @@ namespace DarkRoom.Core
                 saturationLookup[i] = Clamp(i * value);
             }
 
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
 
                 pixel.R += saturationLookup[max - pixel.R];
@@ -217,7 +204,7 @@ namespace DarkRoom.Core
             value = value < -150 ? -150 : value > 150 ? 150 : value;
             value *= -1;
 
-            _image = _ProcessPixels(_image, (pixel) => {  
+            _ProcessPixels((pixel) => {  
                 var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
                 var avg = (double)(pixel.R + pixel.G + pixel.B) / 3;
                 var amt = ((Math.Abs(max - avg) * 2 / 255) * value) / 100;
@@ -241,7 +228,7 @@ namespace DarkRoom.Core
             for (int i = 0; i < 256; i++)
                 gammaLookup[i] = Clamp(Math.Pow((double)i / 255, value) * 255);
 
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 pixel.R = gammaLookup[pixel.R];
                 pixel.G = gammaLookup[pixel.G];
                 pixel.B = gammaLookup[pixel.B];
@@ -257,7 +244,7 @@ namespace DarkRoom.Core
 
             var rng = new Random(Environment.TickCount);
 
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 var randomValue = rng.NextDouble() * value * 2.55;
                 randomValue = (rng.NextDouble() > 0.5 ? -randomValue : randomValue);
                 pixel.R = Clamp(pixel.R + randomValue);
@@ -275,7 +262,7 @@ namespace DarkRoom.Core
 
             value /= 100;
 
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 pixel.R = Clamp((pixel.R * (1 - (0.607 * value))) + (pixel.G * (0.769 * value)) + (pixel.B * (0.189 * value)));
                 pixel.G = Clamp((pixel.R * (0.349 * value)) + (pixel.G * (1 - (0.314 * value))) + (pixel.B * (0.168 * value)));
                 pixel.B = Clamp((pixel.R * (0.272 * value)) + (pixel.G * (0.534 * value)) + (pixel.B * (1 - (0.869 * value))));
@@ -290,7 +277,7 @@ namespace DarkRoom.Core
             value = value > 180 ? 180 : value < -180 ? -180 : value;
 
             value *= 0.5;
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
               var hsv = pixel.ToHsv();
               hsv.H *= 100;
               hsv.H += Math.Abs(value);
@@ -320,12 +307,31 @@ namespace DarkRoom.Core
 
         public Darkroom Tint(HexColor color)
         {
-            _image = _ProcessPixels(_image, (pixel) => {
+            _ProcessPixels((pixel) => {
                 pixel.B = Clamp((pixel.B + (255 - pixel.B) * ((double)color.Pixel.B / 255)));
                 pixel.R = Clamp((pixel.R + (255 - pixel.R) * ((double)color.Pixel.R / 255)));
                 pixel.G = Clamp((pixel.G + (255 - pixel.G) * ((double)color.Pixel.G / 255)));
                 return pixel;
             });
+            return this;
+        }
+
+        public Darkroom Pixelate(int size)
+        {
+            PixelRgb currentPixel = null;
+            int currentPosition = 0;
+
+            _ProcessPixels((pixel) => {
+                if (currentPosition == 0 || currentPosition % size == 0)
+                {
+                    currentPixel = pixel;
+                }
+
+                currentPosition++;
+
+                return currentPixel;
+            });
+
             return this;
         }
 

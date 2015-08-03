@@ -14,12 +14,12 @@ namespace DarkRoom.Example
             //Negative deserialized = img.Digitize().ToNegative();
             //deserialized.Develop("cacat." + data.Mime.ToString().ToLower(), data.Mime);
             Darkroom editor = new Darkroom(img);
-            editor
-                
-                .Tint("#34495e")
-                .Contrast(15)
-                .Wash()
-                .Develop(string.Format(@"{0}.png", Environment.TickCount));
+            editor.Tint("#34495e")
+                    .Contrast(15)
+                    .Pixelate(20)
+                    .Wash()
+                    .Develop(string.Format(@"{0}.png", Environment.TickCount));
+                  
             //Console.WriteLine(img.Digitize().ToString().Substring(0, 50));
             //Console.ReadLine();       
             //Console.ReadLine();
