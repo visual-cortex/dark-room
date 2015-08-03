@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Utils.PixelManipulation
 {
-    internal static class FilterValue
+    internal class FilterValue
     {
         internal static Random RNG = new Random(Environment.TickCount);
 
         internal static readonly double[] BlackAndWhiteRatio = new double[] { 0.3, 0.59, 0.11 };
 
-        internal static byte[] ContrastLookup = new byte[256],
-                               GammaLookup = new byte[256];
+        internal byte[] ContrastLookup = new byte[256],
+                        GammaLookup = new byte[256];
 
-        internal static double[] SaturationLookup = new double[256];
+        internal double[] SaturationLookup = new double[256];
 
-        private static double _brightness;
-        internal static double Brightness
+        private double _brightness;
+        internal double Brightness
         {
             get
             {
@@ -30,8 +30,8 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        private static double _vibrance;
-        internal static double Vibrance
+        private double _vibrance;
+        internal double Vibrance
         {
             get
             {
@@ -43,8 +43,8 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        private static double _noise;
-        internal static double Noise
+        private double _noise;
+        internal double Noise
         {
             get
             {
@@ -56,8 +56,8 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        private static double _sepia;
-        internal static double Sepia
+        private double _sepia;
+        internal double Sepia
         {
             get
             {
@@ -69,8 +69,8 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        private static double _hue;
-        internal static double Hue
+        private double _hue;
+        internal double Hue
         {
             get
             {
@@ -82,7 +82,7 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        internal static double Contrast
+        internal double Contrast
         {
             set
             {
@@ -102,7 +102,7 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        internal static double Saturation
+        internal double Saturation
         {
             set
             {
@@ -115,7 +115,7 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             }
         }
 
-        internal static double Gamma
+        internal double Gamma
         {
             set
             {
