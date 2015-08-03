@@ -38,18 +38,30 @@ namespace DarkRoom.Core.Film
 
         public FileInfo ImageInfo { get; private set; }
 
-        public Negative(string path) : this(Image.FromFile(path))
+        public Negative(string path, int width = 0, int height = 0)
+            : this(Image.FromFile(path), width, height)
         {
             ImageInfo = new FileInfo(path);
         }
 
-        public Negative(Uri path) : this(_LoadUri(path)) { }
+        public Negative(Uri path, int width = 0, int height = 0) : this(_LoadUri(path), width, height) { }
 
-        public Negative(Bitmap image) : this((Image)image) { }
+        public Negative(Bitmap image, int width = 0, int height = 0) : this((Image)image, width, height) { }
 
-        public Negative(Image image)
+        public Negative(Image image, int width = 0, int height = 0)
         {
-            _image = image;
+            if (width != height)
+            {
+                double ratio = width >= height ? (double)image.Height / image.Width : (double)image.Width / image.Height;
+                if (width == 0)
+                    width = (int)(height * ratio);
+                if (height == 0)
+                    height = (int)(width * ratio);
+            }
+
+            if (width == 0 && height == 0)
+                _image = image;
+            else _image = image.GetThumbnailImage(width, height, null, IntPtr.Zero);
         }
 
         public void Develop(string path, int width = 0, int height = 0)
@@ -168,7 +180,7 @@ namespace DarkRoom.Core.Film
             return true;
         }
 
-        public static bool operator !=(Negative left, Negative right)
+        public static bool operator != (Negative left, Negative right)
         {
             return !(left == right);
         }
