@@ -2,13 +2,10 @@
 using DarkRoom.Core.Film;
 using DarkRoom.Core.Film.Colorspace;
 using DarkRoom.Core.Utils;
+using DarkRoom.Core.Utils.PixelManipulation;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkRoom.Core
 {
@@ -85,20 +82,8 @@ namespace DarkRoom.Core
 
         public Darkroom BlackAndWhite(BlackAndWhiteMode mode = BlackAndWhiteMode.Regular)
         {
-            double[] ratio = new double[3];
-            switch(mode)
-            {
-                case BlackAndWhiteMode.Regular: ratio = new double[] { 0.3, 0.59, 0.11 }; break;
-                case BlackAndWhiteMode.Red: ratio = new double[] { 1, 0, 0 }; break;
-                case BlackAndWhiteMode.Green: ratio = new double[] { 0, 1, 0 }; break;
-                case BlackAndWhiteMode.Blue: ratio = new double[] { 0, 0, 1 }; break;
-            }
             _ProcessPixels((pixel) => {
-                byte result = (byte)(pixel.R * ratio[0] + pixel.G * ratio[1] + pixel.B * ratio[2]);
-                pixel.R = result;
-                pixel.G = result;
-                pixel.B = result;
-                return pixel;
+                return pixel.BlackAndWhite(mode);
             });
 
             return this;
@@ -107,46 +92,17 @@ namespace DarkRoom.Core
         public Darkroom Invert()
         {
             _ProcessPixels((pixel) => {
-                pixel.R = (byte)(255 ^ pixel.R);
-                pixel.G = (byte)(255 ^ pixel.G);
-                pixel.B = (byte)(255 ^ pixel.B);
-
-                return pixel;
+                return pixel.Invert();
             });
             return this;
         }
 
         public Darkroom Contrast(double value)
         {
-            value = value < -100 ? -100 : value > 100 ? 100 : value;
-
-            if (value < 0)
-            {
-                value *= -1;
-                value /= 100 * value;
-            }
-            value = Math.Pow((value + 100) / 100, 2);
-
-            byte[] contrastLookup = new byte[256];
-            // create contrast value lookup for faster proccesing
-            for (int i = 0; i < 256; i++)
-            {
-                double pValue = i;
-                pValue = i;
-                pValue /= 255;
-                pValue -= 0.5;
-                pValue *= value;
-                pValue += 0.5;
-                pValue *= 255;
-                contrastLookup[i] = Clamp(pValue);
-            }
+            FilterLogic.SetContrast(value);
 
             _ProcessPixels((pixel) => {
-                pixel.R = contrastLookup[pixel.R];
-                pixel.G = contrastLookup[pixel.B];
-                pixel.B = contrastLookup[pixel.B];
-
-                return pixel;
+                return pixel.Contrast();
             });
 
             return this;
@@ -154,44 +110,22 @@ namespace DarkRoom.Core
 
         public Darkroom Brightness(double value)
         {
-            value = value < -100 ? -100 : value > 100 ? 100 : value;
-
-            value = Math.Floor(255 * (value / 100));
-
-            double tempPixel;
             _ProcessPixels((pixel) => {
-                tempPixel = pixel.R + value;
-                pixel.R = Clamp(tempPixel);
-                tempPixel = pixel.G + value;
-                pixel.G = Clamp(tempPixel);
-                tempPixel = pixel.B + value;
-                pixel.B = Clamp(tempPixel);
-
-                return pixel;
+                return pixel.Brightness(FilterValue.NormalizeBrightness(value));
             });
             return this;
         }
 
         public Darkroom Saturation(double value)
         {
-            value = value < -100 ? -100 : value > 100 ? 100 : value;
-
-            value *= -0.01;
-
-            // generate saturation lookup for faster processing
-            byte[] saturationLookup = new byte[256];
-
-            for (int i = 0; i < 256; i++)
-            {
-                saturationLookup[i] = Clamp(i * value);
-            }
+            FilterValue.SetSaturationLookup(value);
 
             _ProcessPixels((pixel) => {
                 var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
 
-                pixel.R += saturationLookup[max - pixel.R];
-                pixel.G += saturationLookup[max - pixel.G];
-                pixel.B += saturationLookup[max - pixel.B];
+                pixel.R += FilterValue.SaturationLookup[max - pixel.R];
+                pixel.G += FilterValue.SaturationLookup[max - pixel.G];
+                pixel.B += FilterValue.SaturationLookup[max - pixel.B];
 
                 return pixel;
             });

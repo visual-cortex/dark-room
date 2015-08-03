@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DarkRoom.Core.Utils
+namespace DarkRoom.Core.Utils.PixelManipulation
 {
     internal static class PixelHelper
     {

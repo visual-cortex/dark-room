@@ -2,6 +2,7 @@
 using DarkRoom.Core;
 using System;
 using DarkRoom.Core.Utils;
+using DarkRoom.Core.Enums;
 
 namespace DarkRoom.Example
 {
@@ -14,9 +15,11 @@ namespace DarkRoom.Example
             //Negative deserialized = img.Digitize().ToNegative();
             //deserialized.Develop("cacat." + data.Mime.ToString().ToLower(), data.Mime);
             Darkroom editor = new Darkroom(img);
-            editor.Tint("#34495e")
-                    .Contrast(15)
-                    .Pixelate(20)
+            editor//.Tint("#34495e")
+                    //.BlackAndWhite(BlackAndWhiteMode.Regular)
+                    //.Invert()
+                    //.Contrast(50)
+                    .Brightness(10)
                     .Wash()
                     .Develop(string.Format(@"{0}.png", Environment.TickCount));
                   
