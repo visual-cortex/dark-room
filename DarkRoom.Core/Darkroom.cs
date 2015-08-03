@@ -28,7 +28,7 @@ namespace DarkRoom.Core
             }
         }
 
-        private static Bitmap _ProcessPixels(Bitmap source, Func<Pixel, Pixel>  filterLogic)
+        private static Bitmap _ProcessPixels(Bitmap source, Func<RgbPixel, RgbPixel>  filterLogic)
         {
             const int pixelSize = 4; // 32 bits per pixel
             Bitmap target = new Bitmap(
@@ -56,7 +56,7 @@ namespace DarkRoom.Core
 
                         for (int x = 0; x < source.Width; ++x)
                         {
-                            var alteredPixel = filterLogic(new Pixel()
+                            var alteredPixel = filterLogic(new RgbPixel()
                             {
                                 R = sourceRow[x * pixelSize + 2],
                                 G = sourceRow[x * pixelSize + 1],
@@ -105,7 +105,7 @@ namespace DarkRoom.Core
                 case BlackAndWhiteMode.Green: ratio = new double[] { 0, 1, 0 }; break;
                 case BlackAndWhiteMode.Blue: ratio = new double[] { 0, 0, 1 }; break;
             }
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 byte result = (byte)(pixel.R * ratio[0] + pixel.G * ratio[1] + pixel.B * ratio[2]);
                 pixel.R = result;
                 pixel.G = result;
@@ -118,7 +118,7 @@ namespace DarkRoom.Core
 
         public Darkroom Invert()
         {
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 pixel.R = (byte)(255 ^ pixel.R);
                 pixel.G = (byte)(255 ^ pixel.G);
                 pixel.B = (byte)(255 ^ pixel.B);
@@ -153,7 +153,7 @@ namespace DarkRoom.Core
                 contrastLookup[i] = Clamp(pValue);
             }
 
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 pixel.R = contrastLookup[pixel.R];
                 pixel.G = contrastLookup[pixel.B];
                 pixel.B = contrastLookup[pixel.B];
@@ -171,7 +171,7 @@ namespace DarkRoom.Core
             value = Math.Floor(255 * (value / 100));
 
             double tempPixel;
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 tempPixel = pixel.R + value;
                 pixel.R = Clamp(tempPixel);
                 tempPixel = pixel.G + value;
@@ -198,7 +198,7 @@ namespace DarkRoom.Core
                 saturationLookup[i] = Clamp(i * value);
             }
 
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
 
                 pixel.R += saturationLookup[max - pixel.R];
@@ -216,7 +216,7 @@ namespace DarkRoom.Core
             value = value < -150 ? -150 : value > 150 ? 150 : value;
             value *= -1;
 
-            _image = _ProcessPixels(_image, (Pixel pixel) => {  
+            _image = _ProcessPixels(_image, (pixel) => {  
                 var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
                 var avg = (double)(pixel.R + pixel.G + pixel.B) / 3;
                 var amt = ((Math.Abs(max - avg) * 2 / 255) * value) / 100;
@@ -240,7 +240,7 @@ namespace DarkRoom.Core
             for (int i = 0; i < 256; i++)
                 gammaLookup[i] = Clamp(Math.Pow((double)i / 255, value) * 255);
 
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 pixel.R = gammaLookup[pixel.R];
                 pixel.G = gammaLookup[pixel.G];
                 pixel.B = gammaLookup[pixel.B];
@@ -252,9 +252,11 @@ namespace DarkRoom.Core
 
         public Darkroom Noise(double value)
         {
+            value = value > 100 ? 100 : value < 0 ? 0 : value;
+
             var rng = new Random(Environment.TickCount);
 
-            _image = _ProcessPixels(_image, (Pixel pixel) => {
+            _image = _ProcessPixels(_image, (pixel) => {
                 var randomValue = rng.NextDouble() * value * 2.55;
                 randomValue = (rng.NextDouble() > 0.5 ? -randomValue : randomValue);
                 pixel.R = Clamp(pixel.R + randomValue);
@@ -268,6 +270,8 @@ namespace DarkRoom.Core
 
         public Darkroom Sepia(double value = 100)
         {
+            value = value > 100 ? 100 : value < 0 ? 0 : value;
+
             value /= 100;
 
             _image = _ProcessPixels(_image, (pixel) => {
@@ -277,6 +281,22 @@ namespace DarkRoom.Core
                 return pixel;
             });
 
+            return this;
+        }
+
+        public Darkroom Hue(double value)
+        {
+            value = value > 180 ? 180 : value < -180 ? -180 : value;
+
+            value *= 0.5;
+            _image = _ProcessPixels(_image, (pixel) => {
+              var hsv = pixel.ToHsv();
+              hsv.H *= 100;
+              hsv.H += Math.Abs(value);
+              hsv.H %= 100;
+              hsv.H /= 100;
+              return hsv.ToRgb();
+            });
             return this;
         }
 

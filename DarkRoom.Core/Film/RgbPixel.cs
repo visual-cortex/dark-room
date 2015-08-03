@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Film
 {
-    internal class Pixel
+    internal class RgbPixel
     {
         public byte R { get; set; }
         public byte G { get; set; }
