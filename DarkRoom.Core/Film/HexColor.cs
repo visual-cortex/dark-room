@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DarkRoom.Core.Film.Colorspace;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace DarkRoom.Core.Film
 {
     public class HexColor
     {
-        internal RgbPixel Pixel { get; private set; }
+        internal PixelRgb Pixel { get; private set; }
 
         public string Hex { get; private set; }
         public byte[] Channels { get; private set; }
@@ -26,7 +27,7 @@ namespace DarkRoom.Core.Film
                      .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                      .ToArray();
 
-            Pixel = new RgbPixel();
+            Pixel = new PixelRgb();
 
             Pixel.R = Channels[0];
             Pixel.G = Channels[1];

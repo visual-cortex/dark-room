@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DarkRoom.Core.Film
+namespace DarkRoom.Core.Film.Colorspace
 {
-    internal class HsvPixel
+    internal class PixelHsv
     {
         public double H { get; set; }
         public double S { get; set; }

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DarkRoom.Core.Film
+namespace DarkRoom.Core.Film.Colorspace
 {
-    internal class RgbPixel
+    internal class PixelRgb
     {
         public byte R { get; set; }
         public byte G { get; set; }

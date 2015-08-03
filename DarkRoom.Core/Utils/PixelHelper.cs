@@ -1,4 +1,5 @@
 ﻿using DarkRoom.Core.Film;
+using DarkRoom.Core.Film.Colorspace;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,12 +10,12 @@ namespace DarkRoom.Core.Utils
 {
     internal static class PixelHelper
     {
-        internal static HsvPixel ToHsv(this RgbPixel pixel)
+        internal static PixelHsv ToHsv(this PixelRgb pixel)
         {
             double d, max, min,
                    R, G, B;
 
-            HsvPixel hsvPixel = new HsvPixel();
+            PixelHsv hsvPixel = new PixelHsv();
 
             R = (double)pixel.R / 255;
             G = (double)pixel.G / 255;
@@ -43,7 +44,7 @@ namespace DarkRoom.Core.Utils
             return hsvPixel;
         }
 
-        internal static RgbPixel ToRgb(this HsvPixel pixel)
+        internal static PixelRgb ToRgb(this PixelHsv pixel)
         {
             double b = 0, f, g = 0, p, q, r = 0, t;
             int i;
@@ -87,7 +88,7 @@ namespace DarkRoom.Core.Utils
                     break;
             }
 
-            return new RgbPixel()
+            return new PixelRgb()
             {
                 R = (byte)Math.Floor(r * 255),
                 G = (byte)Math.Floor(g * 255),

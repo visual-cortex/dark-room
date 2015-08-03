@@ -1,5 +1,6 @@
 ﻿using DarkRoom.Core.Enums;
 using DarkRoom.Core.Film;
+using DarkRoom.Core.Film.Colorspace;
 using DarkRoom.Core.Utils;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace DarkRoom.Core
             }
         }
 
-        private static Bitmap _ProcessPixels(Bitmap source, Func<RgbPixel, RgbPixel>  filterLogic)
+        private static Bitmap _ProcessPixels(Bitmap source, Func<PixelRgb, PixelRgb>  filterLogic)
         {
             const int pixelSize = 4; // 32 bits per pixel
             Bitmap target = new Bitmap(
@@ -56,7 +57,7 @@ namespace DarkRoom.Core
 
                         for (int x = 0; x < source.Width; ++x)
                         {
-                            var alteredPixel = filterLogic(new RgbPixel()
+                            var alteredPixel = filterLogic(new PixelRgb()
                             {
                                 R = sourceRow[x * pixelSize + 2],
                                 G = sourceRow[x * pixelSize + 1],
