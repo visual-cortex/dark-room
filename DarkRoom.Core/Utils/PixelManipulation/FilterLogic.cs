@@ -10,11 +10,6 @@ namespace DarkRoom.Core.Utils.PixelManipulation
 {
     internal static class FilterLogic
     {
-        static FilterLogic()
-        {
-            FilterValue.BlackAndWhiteRatio = new double[] { 0.3, 0.59, 0.11 };
-        }
-
         internal static PixelRgb Invert(this PixelRgb pixel)
         {
             pixel.R = (byte)(255 ^ pixel.R);
@@ -43,31 +38,6 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             return pixel;
         }
 
-        internal static void SetContrast(double value)
-        {
-            value = value < -100 ? -100 : value > 100 ? 100 : value;
-
-            if (value < 0)
-            {
-                value *= -1;
-                value /= 100 * value;
-            }
-            value = Math.Pow((value + 100) / 100, 2);
-
-            // create contrast value lookup for faster proccesing
-            for (int i = 0; i < 256; i++)
-            {
-                double pValue = i;
-                pValue = i;
-                pValue /= 255;
-                pValue -= 0.5;
-                pValue *= value;
-                pValue += 0.5;
-                pValue *= 255;
-                FilterValue.ContrastLookup[i] = Clamp(pValue);
-            }
-        }
-
         internal static PixelRgb Contrast(this PixelRgb pixel)
         {
             pixel.R = FilterValue.ContrastLookup[pixel.R];
@@ -76,18 +46,78 @@ namespace DarkRoom.Core.Utils.PixelManipulation
             return pixel;
         }
 
-        internal static PixelRgb Brightness(this PixelRgb pixel, double value)
+        internal static PixelRgb Brightness(this PixelRgb pixel)
         {
-            pixel.R = Clamp(pixel.R + value);
-            pixel.G = Clamp(pixel.G + value);
-            pixel.B = Clamp(pixel.B + value);
+            pixel.R = PixelHelper.Clamp(pixel.R + FilterValue.Brightness);
+            pixel.G = PixelHelper.Clamp(pixel.G + FilterValue.Brightness);
+            pixel.B = PixelHelper.Clamp(pixel.B + FilterValue.Brightness);
 
             return pixel;
         }
 
-        private static byte Clamp(double pValue)
+        internal static PixelRgb Saturation(this PixelRgb pixel)
         {
-            return pValue > 255 ? (byte)255 : pValue < 0 ? (byte)0 : (byte)pValue;
+            var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
+
+            pixel.R = PixelHelper.Clamp(pixel.R + FilterValue.SaturationLookup[max - pixel.R]);
+            pixel.G = PixelHelper.Clamp(pixel.G + FilterValue.SaturationLookup[max - pixel.G]);
+            pixel.B = PixelHelper.Clamp(pixel.B + FilterValue.SaturationLookup[max - pixel.B]);
+
+            return pixel;
+        }
+
+        internal static PixelRgb Vibrance(this PixelRgb pixel)
+        {
+            var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
+            var avg = (double)(pixel.R + pixel.G + pixel.B) / 3;
+            var amt = ((Math.Abs(max - avg) * 2 / 255) * FilterValue.Vibrance) / 100;
+
+            pixel.R = PixelHelper.Clamp(pixel.R + (max - pixel.R) * amt);
+            pixel.G = PixelHelper.Clamp(pixel.G + (max - pixel.G) * amt);
+            pixel.B = PixelHelper.Clamp(pixel.B + (max - pixel.B) * amt);
+
+            return pixel;
+        }
+
+        internal static PixelRgb Gamma(this PixelRgb pixel)
+        {
+            pixel.R = FilterValue.GammaLookup[pixel.R];
+            pixel.G = FilterValue.GammaLookup[pixel.G];
+            pixel.B = FilterValue.GammaLookup[pixel.B];
+
+            return pixel;
+        }
+
+        internal static PixelRgb Noise(this PixelRgb pixel)
+        {
+            var randomValue = FilterValue.RNG.NextDouble() * FilterValue.Noise * 2.55;
+            randomValue = (FilterValue.RNG.NextDouble() > 0.5 ? -randomValue : randomValue);
+            pixel.R = PixelHelper.Clamp(pixel.R + randomValue);
+            pixel.B = PixelHelper.Clamp(pixel.B + randomValue);
+            pixel.G = PixelHelper.Clamp(pixel.G + randomValue);
+
+            return pixel;
+        }
+
+        internal static PixelRgb Sepia(this PixelRgb pixel)
+        {
+            double value = FilterValue.Sepia;
+
+            pixel.R = PixelHelper.Clamp((pixel.R * (1 - (0.607 * value))) + (pixel.G * (0.769 * value)) + (pixel.B * (0.189 * value)));
+            pixel.G = PixelHelper.Clamp((pixel.R * (0.349 * value)) + (pixel.G * (1 - (0.314 * value))) + (pixel.B * (0.168 * value)));
+            pixel.B = PixelHelper.Clamp((pixel.R * (0.272 * value)) + (pixel.G * (0.534 * value)) + (pixel.B * (1 - (0.869 * value))));
+
+            return pixel;
+        }
+
+        internal static PixelRgb Hue(this PixelRgb pixel)
+        {
+            var hsv = pixel.ToHsv();
+            hsv.H *= 100;
+            hsv.H += Math.Abs(FilterValue.Hue);
+            hsv.H %= 100;
+            hsv.H /= 100;
+            return hsv.ToRgb();
         }
     }
 }

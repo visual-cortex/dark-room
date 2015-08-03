@@ -96,5 +96,10 @@ namespace DarkRoom.Core.Utils.PixelManipulation
                 A = 255
             };
         }
+
+        internal static byte Clamp(double pValue)
+        {
+            return pValue > 255 ? (byte)255 : pValue < 0 ? (byte)0 : (byte)pValue;
+        }
     }
 }

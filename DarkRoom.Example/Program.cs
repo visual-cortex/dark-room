@@ -11,21 +11,21 @@ namespace DarkRoom.Example
         static void Main(string[] args)
         {
             Negative img = new Negative("sample.jpg");
-            //DataUri data = new DataUri("'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC'");
-            //Negative deserialized = img.Digitize().ToNegative();
-            //deserialized.Develop("cacat." + data.Mime.ToString().ToLower(), data.Mime);
+
             Darkroom editor = new Darkroom(img);
-            editor//.Tint("#34495e")
+            editor
                     //.BlackAndWhite(BlackAndWhiteMode.Regular)
                     //.Invert()
                     //.Contrast(50)
-                    .Brightness(10)
+                    //.Brightness(10)
+                    //.Saturation(50)
+                    //.Vibrance(-50)
+                    //.Gammma(-50)
+                    //.Noise(25)
+                    //.Sepia()
+                    //.Hue(45)
                     .Wash()
                     .Develop(string.Format(@"{0}.png", Environment.TickCount));
-                  
-            //Console.WriteLine(img.Digitize().ToString().Substring(0, 50));
-            //Console.ReadLine();       
-            //Console.ReadLine();
         }
     }
 }

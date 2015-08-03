@@ -69,11 +69,6 @@ namespace DarkRoom.Core
             }
         }
 
-        private static byte Clamp(double pValue)
-        {
-            return pValue > 255 ? (byte)255 : pValue < 0 ? (byte)0 : (byte)pValue;
-        }
-
         public Darkroom(Negative image)
         {
             _original = image;
@@ -99,7 +94,7 @@ namespace DarkRoom.Core
 
         public Darkroom Contrast(double value)
         {
-            FilterLogic.SetContrast(value);
+            FilterValue.Contrast = value;
 
             _ProcessPixels((pixel) => {
                 return pixel.Contrast();
@@ -110,24 +105,21 @@ namespace DarkRoom.Core
 
         public Darkroom Brightness(double value)
         {
+            FilterValue.Brightness = value;
+
             _ProcessPixels((pixel) => {
-                return pixel.Brightness(FilterValue.NormalizeBrightness(value));
+                return pixel.Brightness();
             });
+
             return this;
         }
 
         public Darkroom Saturation(double value)
         {
-            FilterValue.SetSaturationLookup(value);
+            FilterValue.Saturation = value;
 
             _ProcessPixels((pixel) => {
-                var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
-
-                pixel.R += FilterValue.SaturationLookup[max - pixel.R];
-                pixel.G += FilterValue.SaturationLookup[max - pixel.G];
-                pixel.B += FilterValue.SaturationLookup[max - pixel.B];
-
-                return pixel;
+                return pixel.Saturation();
             });
 
             return this;
@@ -135,38 +127,21 @@ namespace DarkRoom.Core
 
         public Darkroom Vibrance(double value)
         {
-            value = value < -150 ? -150 : value > 150 ? 150 : value;
-            value *= -1;
+            FilterValue.Vibrance = value;
 
             _ProcessPixels((pixel) => {  
-                var max = Math.Max(Math.Max(pixel.R, pixel.G), pixel.B);
-                var avg = (double)(pixel.R + pixel.G + pixel.B) / 3;
-                var amt = ((Math.Abs(max - avg) * 2 / 255) * value) / 100;
-                pixel.R = Clamp(pixel.R + (max - pixel.R) * amt);
-                pixel.G = Clamp(pixel.G + (max - pixel.G) * amt);
-                pixel.B = Clamp(pixel.B + (max - pixel.B) * amt);
-                return pixel;
+                return pixel.Vibrance();
             });
+
             return this;
         }
 
         public Darkroom Gammma(double value)
         {
-            value = value < -100 ? -100 : value > 100 ? 100 : value;
-
-            if (value >= 0)
-                value = 1 - (value / 100);
-            else value /= -1;
-
-            byte[] gammaLookup = new byte[256];
-            for (int i = 0; i < 256; i++)
-                gammaLookup[i] = Clamp(Math.Pow((double)i / 255, value) * 255);
+            FilterValue.Gamma = value;
 
             _ProcessPixels((pixel) => {
-                pixel.R = gammaLookup[pixel.R];
-                pixel.G = gammaLookup[pixel.G];
-                pixel.B = gammaLookup[pixel.B];
-                return pixel;
+                return pixel.Gamma();
             });
 
             return this;
@@ -174,17 +149,10 @@ namespace DarkRoom.Core
 
         public Darkroom Noise(double value)
         {
-            value = value > 100 ? 100 : value < 0 ? 0 : value;
-
-            var rng = new Random(Environment.TickCount);
+            FilterValue.Noise = value;
 
             _ProcessPixels((pixel) => {
-                var randomValue = rng.NextDouble() * value * 2.55;
-                randomValue = (rng.NextDouble() > 0.5 ? -randomValue : randomValue);
-                pixel.R = Clamp(pixel.R + randomValue);
-                pixel.B = Clamp(pixel.B + randomValue);
-                pixel.G = Clamp(pixel.G + randomValue);
-                return pixel;
+                return pixel.Noise();
             });
 
             return this;
@@ -192,15 +160,10 @@ namespace DarkRoom.Core
 
         public Darkroom Sepia(double value = 100)
         {
-            value = value > 100 ? 100 : value < 0 ? 0 : value;
-
-            value /= 100;
+            FilterValue.Sepia = value;
 
             _ProcessPixels((pixel) => {
-                pixel.R = Clamp((pixel.R * (1 - (0.607 * value))) + (pixel.G * (0.769 * value)) + (pixel.B * (0.189 * value)));
-                pixel.G = Clamp((pixel.R * (0.349 * value)) + (pixel.G * (1 - (0.314 * value))) + (pixel.B * (0.168 * value)));
-                pixel.B = Clamp((pixel.R * (0.272 * value)) + (pixel.G * (0.534 * value)) + (pixel.B * (1 - (0.869 * value))));
-                return pixel;
+                return pixel.Sepia();
             });
 
             return this;
@@ -208,20 +171,19 @@ namespace DarkRoom.Core
 
         public Darkroom Hue(double value)
         {
-            value = value > 180 ? 180 : value < -180 ? -180 : value;
+            FilterValue.Hue = value;
 
-            value *= 0.5;
             _ProcessPixels((pixel) => {
-              var hsv = pixel.ToHsv();
-              hsv.H *= 100;
-              hsv.H += Math.Abs(value);
-              hsv.H %= 100;
-              hsv.H /= 100;
-              return hsv.ToRgb();
+                return pixel.Hue();
             });
+
             return this;
         }
 
+        /* TO-DO 
+         * 
+         * Separate processing logic.
+         */
         public Darkroom Tint(string hex)
         {
             return Tint(new HexColor(hex));
@@ -242,9 +204,9 @@ namespace DarkRoom.Core
         public Darkroom Tint(HexColor color)
         {
             _ProcessPixels((pixel) => {
-                pixel.B = Clamp((pixel.B + (255 - pixel.B) * ((double)color.Pixel.B / 255)));
-                pixel.R = Clamp((pixel.R + (255 - pixel.R) * ((double)color.Pixel.R / 255)));
-                pixel.G = Clamp((pixel.G + (255 - pixel.G) * ((double)color.Pixel.G / 255)));
+                pixel.B = PixelHelper.Clamp((pixel.B + (255 - pixel.B) * ((double)color.Pixel.B / 255)));
+                pixel.R = PixelHelper.Clamp((pixel.R + (255 - pixel.R) * ((double)color.Pixel.R / 255)));
+                pixel.G = PixelHelper.Clamp((pixel.G + (255 - pixel.G) * ((double)color.Pixel.G / 255)));
                 return pixel;
             });
             return this;
