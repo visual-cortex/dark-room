@@ -232,8 +232,15 @@ namespace DarkRoom.Core
 
         public Negative Wash()
         {
-            ApplyFilters();
-            return _internal;
+            try
+            {
+                ApplyFilters();
+                return _internal;
+            }
+            finally
+            {
+                Reset();
+            }
         }
 
         private void ApplyFilters()
