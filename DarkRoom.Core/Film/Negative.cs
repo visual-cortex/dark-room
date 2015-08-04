@@ -130,6 +130,9 @@ namespace DarkRoom.Core.Film
             if (left.Equals(right))
                 return true;
 
+            if (left.Height != right.Height || left.Width != right.Width)
+                return false;
+
             Bitmap source = (Bitmap)left._image,
                    target = (Bitmap)right._image;
 
@@ -187,7 +190,7 @@ namespace DarkRoom.Core.Film
 
         public override bool Equals(object obj)
         {
-            return this == (Negative)obj;
+            return this.GetHashCode() == obj.GetHashCode();
         }
 
         public override int GetHashCode()
