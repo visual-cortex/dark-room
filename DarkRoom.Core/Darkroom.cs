@@ -292,10 +292,12 @@ namespace DarkRoom.Core
                 return pixel;
             });
         }
-       
-        public void Reset()
+
+        public Darkroom Reset()
         {
+            appliedFilters.Clear();
             _internal = _original.Clone();
+            return this;
         }
     }
 }
