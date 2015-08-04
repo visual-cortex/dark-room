@@ -244,47 +244,47 @@ namespace DarkRoom.Core
                     switch (filter.Name)
                     {
                         case Filters.BlackAndWhite:
-                            pixel.BlackAndWhite((BlackAndWhiteMode)filter.Value);
+                            pixel = pixel.BlackAndWhite((BlackAndWhiteMode)filter.Value);
                             break;
 
                         case Filters.Brightness:
-                            pixel.Brightness((double)filter.Value);
+                            pixel = pixel.Brightness((double)filter.Value);
                             break;
 
                         case Filters.Contrast:
-                            pixel.Contrast((byte[])filter.Value);
+                            pixel = pixel.Contrast((byte[])filter.Value);
                             break;
 
                         case Filters.Gamma:
-                            pixel.Gamma((byte[])filter.Value);
+                            pixel = pixel.Gamma((byte[])filter.Value);
                             break;
 
                         case Filters.Hue:
-                            pixel.Hue((double)filter.Value);
+                            pixel = pixel.Hue((double)filter.Value);
                             break;
 
                         case Filters.Invert:
-                            pixel.Invert();
+                            pixel = pixel.Invert();
                             break;
 
                         case Filters.Noise:
-                            pixel.Noise((double)filter.Value);
+                            pixel = pixel.Noise((double)filter.Value);
                             break;
 
                         case Filters.Saturation:
-                            pixel.Saturation((double[])filter.Value);
+                            pixel = pixel.Saturation((double[])filter.Value);
                             break;
 
                         case Filters.Sepia:
-                            pixel.Sepia((double)filter.Value);
+                            pixel = pixel.Sepia((double)filter.Value);
                             break;
 
                         case Filters.Tint:
-                            pixel.Tint((HexColor)filter.Value);
+                            pixel = pixel.Tint((HexColor)filter.Value);
                             break;
 
                         case Filters.Vibrance:
-                            pixel.Vibrance((double)filter.Value);
+                            pixel = pixel.Vibrance((double)filter.Value);
                             break;
                     }
                 }
