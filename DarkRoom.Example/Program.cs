@@ -14,7 +14,7 @@ namespace DarkRoom.Example
         {
             Stopwatch timer = Stopwatch.StartNew();
 
-            Negative img = new Negative("sample.jpg", 1280);
+            Negative img = new Negative("sample.jpg");
 
             Darkroom editor = new Darkroom(img);
 

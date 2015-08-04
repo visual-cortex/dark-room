@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Threading.Tasks;
 
 namespace DarkRoom.Core
 {
@@ -45,11 +46,14 @@ namespace DarkRoom.Core
                       new Rectangle(0, 0, _image.Width, _image.Height),
                       ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-                    for (int y = 0; y < _image.Height; ++y)
+                    int height = _image.Height,
+                        width = _image.Width;
+
+                    Parallel.For(0, height, y =>
                     {
                         byte* sourceRow = (byte*)sourceData.Scan0 + (y * sourceData.Stride);
 
-                        for (int x = 0; x < _image.Width; ++x)
+                        for (int x = 0; x < width; x++)
                         {
                             var alteredPixel = filterLogic(new PixelRgb()
                             {
@@ -64,7 +68,7 @@ namespace DarkRoom.Core
                             sourceRow[x * pixelSize + 2] = alteredPixel.R;
                             sourceRow[x * pixelSize + 3] = alteredPixel.A;
                         }
-                    }
+                    });
                 }
                 finally
                 {
