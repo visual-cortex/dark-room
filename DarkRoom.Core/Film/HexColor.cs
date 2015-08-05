@@ -1,9 +1,6 @@
 ﻿using DarkRoom.Core.Film.Colorspace;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Film
 {
@@ -17,7 +14,7 @@ namespace DarkRoom.Core.Film
         public HexColor(string hex)
         {
             Hex = hex;
-            hex = hex.Replace("#", "");
+            hex = hex.TrimStart('#');
 
             if (hex.Length != 6)
                 throw new Exception(string.Format("#{0} is an invalid color code.", hex));

@@ -1,10 +1,5 @@
-﻿using DarkRoom.Core.Film;
-using DarkRoom.Core.Film.Colorspace;
+﻿using DarkRoom.Core.Film.Colorspace;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Utils.PixelManipulation
 {

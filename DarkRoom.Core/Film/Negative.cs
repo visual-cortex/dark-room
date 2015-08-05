@@ -1,14 +1,11 @@
 ﻿using DarkRoom.Core.Enums;
 using DarkRoom.Core.Utils;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Film
 {
