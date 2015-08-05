@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DarkRoom.Core
 {
@@ -234,7 +236,7 @@ namespace DarkRoom.Core
             return this;
         }
 
-        public Negative Wash()
+        public Negative Wash(bool resetImage = true)
         {
             try
             {
@@ -243,8 +245,16 @@ namespace DarkRoom.Core
             }
             finally
             {
-                Reset();
+                if(resetImage)
+                    Reset();
             }
+        }
+
+        public Task<Negative> WashAsync(bool resetImage = true)
+        {
+            return Task.Run(() => {
+                return Wash(resetImage);
+            });
         }
 
         private void ApplyFilters()
@@ -252,6 +262,14 @@ namespace DarkRoom.Core
             _ProcessPixels((pixel) => {
                 foreach(var filter in appliedFilters)
                 {
+                    /*
+                     * DYNAMIC FILTER INVOCATION
+                     * IMPACTS EXECUTION TOO MUCH
+                        var filterMethod = pixel.GetType().GetMethod(filter.Name.ToString(), BindingFlags.NonPublic | BindingFlags.Instance);
+                        var parameter = filterMethod.GetParameters().FirstOrDefault();
+
+                        pixel = (PixelRgb)filterMethod.Invoke(pixel, parameter == null ? null : new object[] { filter.Value });
+                    */
                     switch (filter.Name)
                     {
                         case Filters.BlackAndWhite:

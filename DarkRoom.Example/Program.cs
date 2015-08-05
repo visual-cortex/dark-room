@@ -12,28 +12,59 @@ namespace DarkRoom.Example
     {
         static void Main(string[] args)
         {
-            Stopwatch timer = Stopwatch.StartNew();
+            Negative img = new Negative("sample.jpg");
+            //MainAsync(img);
+            MainSync(img);
+            Console.ReadLine();
+        }
 
-            Negative img = new Negative("sample.jpg", 1280);
+        static void MainSync(Negative img)
+        {
+            Stopwatch timer = Stopwatch.StartNew();
 
             Darkroom editor = new Darkroom(img);
 
             editor
                 .BlackAndWhite(BlackAndWhiteMode.Regular)
-                .Invert()
-                .Contrast(50)
-                .Brightness(10)
-                .Saturation(-50)
-                .Vibrance(-50)
-                .Gammma(-50)
-                .Noise(25)
-                .Sepia()
-                .Hue(45)
+                //.Invert()
+                //.Contrast(50)
+                //.Brightness(10)
+                //.Saturation(-50)
+                //.Vibrance(-50)
+                //.Gammma(-50)
+                //.Noise(25)
+                //.Sepia()
+                //.Hue(45)
                 .Wash()
                 .Develop(string.Format(@"{0}.jpg", Environment.TickCount));
+            timer.Stop();
+            Console.WriteLine("Sync method: {0} seconds", timer.Elapsed.TotalSeconds);
+        }
 
-            Console.WriteLine(timer.Elapsed.TotalSeconds);
-            Console.ReadLine();
+        static async void MainAsync(Negative img)
+        {
+            Stopwatch timer = Stopwatch.StartNew();
+
+            Darkroom editor = new Darkroom(img);
+
+            var edited = await editor
+                            .BlackAndWhite(BlackAndWhiteMode.Regular)
+                            .Invert()
+                            .Contrast(50)
+                            .Brightness(10)
+                            .Saturation(-50)
+                            .Vibrance(-50)
+                            .Gammma(-50)
+                            .Noise(25)
+                            .Sepia()
+                            .Hue(45)
+                            .WashAsync();
+
+            edited.Develop(string.Format(@"{0}.jpg", Environment.TickCount));
+
+            timer.Stop();
+
+            Console.WriteLine("Async method: {0} seconds", timer.Elapsed.TotalSeconds);
         }
     }
 }

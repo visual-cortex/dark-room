@@ -55,7 +55,6 @@
     <Compile Include="Filter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\ExtensionHelper.cs" />
-    <Compile Include="Utils\PixelManipulation\FilterLogic.cs" />
     <Compile Include="Utils\PixelManipulation\FilterValue.cs" />
     <Compile Include="Utils\ObjectCloner.cs" />
     <Compile Include="Utils\PixelManipulation\PixelHelper.cs" />
