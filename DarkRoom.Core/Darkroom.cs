@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace DarkRoom.Core
 {
-    public class Darkroom
+    public sealed class Darkroom : IDisposable
     {
         private Negative _original,
                          _internal;
@@ -32,10 +32,9 @@ namespace DarkRoom.Core
             }
         }
 
-        private void _ProcessPixels(Func<PixelRgb, PixelRgb>  filterLogic)
+        private void _ProcessPixels(Func<PixelRgb, PixelRgb> filterLogic)
         {
-            // 32 bits per pixel
-            const int pixelSize = 4; 
+            const int pixelSize = 4;
 
             BitmapData sourceData = null;
             unsafe
@@ -49,24 +48,24 @@ namespace DarkRoom.Core
                     int height = _image.Height,
                         width = _image.Width;
 
-                    Parallel.For(0, height, y =>
+                    Parallel.For(0, height, i =>
                     {
-                        byte* sourceRow = (byte*)sourceData.Scan0 + (y * sourceData.Stride);
+                        byte* sourceRow = (byte*)sourceData.Scan0 + (i * sourceData.Stride);
 
-                        for (int x = 0; x < width; x++)
+                        for (int j = 0; j < width; j++)
                         {
                             var alteredPixel = filterLogic(new PixelRgb()
                             {
-                                R = sourceRow[x * pixelSize + 2],
-                                G = sourceRow[x * pixelSize + 1],
-                                B = sourceRow[x * pixelSize + 0],
-                                A = sourceRow[x * pixelSize + 3]
+                                R = sourceRow[j * pixelSize + 2],
+                                G = sourceRow[j * pixelSize + 1],
+                                B = sourceRow[j * pixelSize + 0],
+                                A = sourceRow[j * pixelSize + 3]
                             });
 
-                            sourceRow[x * pixelSize + 0] = alteredPixel.B;
-                            sourceRow[x * pixelSize + 1] = alteredPixel.G;
-                            sourceRow[x * pixelSize + 2] = alteredPixel.R;
-                            sourceRow[x * pixelSize + 3] = alteredPixel.A;
+                            sourceRow[j * pixelSize + 0] = alteredPixel.B;
+                            sourceRow[j * pixelSize + 1] = alteredPixel.G;
+                            sourceRow[j * pixelSize + 2] = alteredPixel.R;
+                            sourceRow[j * pixelSize + 3] = alteredPixel.A;
                         }
                     });
                 }
@@ -74,6 +73,7 @@ namespace DarkRoom.Core
                 {
                     if (sourceData != null)
                         _image.UnlockBits(sourceData);
+                    GC.Collect();
                 }
             }
         }
@@ -303,7 +303,7 @@ namespace DarkRoom.Core
             }
             finally
             {
-                if(resetImage)
+                if (resetImage)
                     Reset();
             }
         }
@@ -327,6 +327,13 @@ namespace DarkRoom.Core
             appliedFilters.Clear();
             _internal = _original.Clone();
             return this;
+        }
+
+        public void Dispose()
+        {
+            //_original.Dispose();
+            _internal.Dispose();
+            appliedFilters.Clear();
         }
     }
 }

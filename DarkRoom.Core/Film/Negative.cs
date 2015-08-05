@@ -6,11 +6,13 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace DarkRoom.Core.Film
 {
     [Serializable]
-    public class Negative
+    public sealed class Negative : IDisposable
     {
         internal Image _image;
  
@@ -90,6 +92,69 @@ namespace DarkRoom.Core.Film
             if (width == 0 && height == 0)
                 _image.Save(path, imageFormat);
             else _image.GetThumbnailImage(width, height, null, IntPtr.Zero).Save(path, imageFormat);
+        }
+
+        public Negative Cut(int x, int y, int width, int height)
+        {
+            Bitmap originalBitmap = (Bitmap)_image;
+
+            if(x > originalBitmap.Width)
+            {
+                throw new Exception(string.Format("Horizontal displacement (x) is greater than the image width. {0} > {1}.", x, originalBitmap.Width));
+            }
+
+            if (y > originalBitmap.Height)
+            {
+                throw new Exception(string.Format("Vertical displacement (y) is greater than the image height. {0} > {1}.", y, originalBitmap.Height));
+            }
+
+            if (originalBitmap.Width < width || originalBitmap.Height < height)
+            {
+                throw new Exception("Cropped height and width cannot be greater than the original image size.");
+            }
+
+            BitmapData rawOriginal = originalBitmap.LockBits(new Rectangle(0, 0, originalBitmap.Width, originalBitmap.Height), 
+                ImageLockMode.ReadOnly, 
+                PixelFormat.Format32bppArgb);
+
+            Bitmap croppedBitmap = new Bitmap(width, height);
+            BitmapData rawCropped = croppedBitmap.LockBits(new Rectangle(0, 0, width, height),
+                ImageLockMode.WriteOnly, 
+                PixelFormat.Format32bppArgb);
+
+            const int pixelSize = 4;
+
+            try {
+                unsafe
+                {
+                    Parallel.For(0, height, i =>
+                    {
+                        byte* sourceRow = (byte*)rawOriginal.Scan0 + ((i + y) * rawOriginal.Stride);
+                        byte* destinationRow = (byte*)rawCropped.Scan0 + (i * rawCropped.Stride);
+
+                        for (int j = 0; j < width; j++)
+                        {
+                            int horizontalDisplacement = (x * pixelSize);
+
+                            destinationRow[j * pixelSize + 0] = sourceRow[horizontalDisplacement + j * pixelSize + 0];
+                            destinationRow[j * pixelSize + 1] = sourceRow[horizontalDisplacement + j * pixelSize + 1];
+                            destinationRow[j * pixelSize + 2] = sourceRow[horizontalDisplacement + j * pixelSize + 2];
+                            destinationRow[j * pixelSize + 3] = sourceRow[horizontalDisplacement + j * pixelSize + 3];
+                        }
+                    });
+                }
+            }
+            finally
+            {
+                if(rawOriginal != null)
+                    originalBitmap.UnlockBits(rawOriginal);
+                if(rawCropped != null)
+                    croppedBitmap.UnlockBits(rawCropped);
+            }
+
+            GC.Collect();
+            _image = croppedBitmap;
+            return this;
         }
 
         public DataUri Digitize()
@@ -193,6 +258,11 @@ namespace DarkRoom.Core.Film
         public override int GetHashCode()
         {
            return _image.GetHashCode();
+        }
+
+        public void Dispose()
+        {
+            _image.Dispose();
         }
     }
 }
