@@ -240,7 +240,67 @@ namespace DarkRoom.Core
         {
             try
             {
-                ApplyFilters();
+                _ProcessPixels((pixel) => {
+                    foreach (var filter in appliedFilters)
+                    {
+                        /*
+                         * DYNAMIC FILTER INVOCATION
+                         * IMPACTS EXECUTION TOO MUCH
+                            var filterMethod = pixel.GetType().GetMethod(filter.Name.ToString(), BindingFlags.NonPublic | BindingFlags.Instance);
+                            var parameter = filterMethod.GetParameters().FirstOrDefault();
+
+                            pixel = (PixelRgb)filterMethod.Invoke(pixel, parameter == null ? null : new object[] { filter.Value });
+                        */
+                        switch (filter.Name)
+                        {
+                            case Filters.BlackAndWhite:
+                                pixel = pixel.BlackAndWhite((BlackAndWhiteMode)filter.Value);
+                                break;
+
+                            case Filters.Brightness:
+                                pixel = pixel.Brightness((double)filter.Value);
+                                break;
+
+                            case Filters.Contrast:
+                                pixel = pixel.Contrast((byte[])filter.Value);
+                                break;
+
+                            case Filters.Gamma:
+                                pixel = pixel.Gamma((byte[])filter.Value);
+                                break;
+
+                            case Filters.Hue:
+                                pixel = pixel.Hue((double)filter.Value);
+                                break;
+
+                            case Filters.Invert:
+                                pixel = pixel.Invert();
+                                break;
+
+                            case Filters.Noise:
+                                pixel = pixel.Noise((double)filter.Value);
+                                break;
+
+                            case Filters.Saturation:
+                                pixel = pixel.Saturation((double[])filter.Value);
+                                break;
+
+                            case Filters.Sepia:
+                                pixel = pixel.Sepia((double)filter.Value);
+                                break;
+
+                            case Filters.Tint:
+                                pixel = pixel.Tint((HexColor)filter.Value);
+                                break;
+
+                            case Filters.Vibrance:
+                                pixel = pixel.Vibrance((double)filter.Value);
+                                break;
+                        }
+                    }
+
+                    return pixel;
+                });
                 return _internal;
             }
             finally
@@ -257,69 +317,11 @@ namespace DarkRoom.Core
             });
         }
 
-        private void ApplyFilters()
+        public Darkroom Batch(IEnumerable<Filter> filters)
         {
-            _ProcessPixels((pixel) => {
-                foreach(var filter in appliedFilters)
-                {
-                    /*
-                     * DYNAMIC FILTER INVOCATION
-                     * IMPACTS EXECUTION TOO MUCH
-                        var filterMethod = pixel.GetType().GetMethod(filter.Name.ToString(), BindingFlags.NonPublic | BindingFlags.Instance);
-                        var parameter = filterMethod.GetParameters().FirstOrDefault();
+            appliedFilters.AddRange(filters);
 
-                        pixel = (PixelRgb)filterMethod.Invoke(pixel, parameter == null ? null : new object[] { filter.Value });
-                    */
-                    switch (filter.Name)
-                    {
-                        case Filters.BlackAndWhite:
-                            pixel = pixel.BlackAndWhite((BlackAndWhiteMode)filter.Value);
-                            break;
-
-                        case Filters.Brightness:
-                            pixel = pixel.Brightness((double)filter.Value);
-                            break;
-
-                        case Filters.Contrast:
-                            pixel = pixel.Contrast((byte[])filter.Value);
-                            break;
-
-                        case Filters.Gamma:
-                            pixel = pixel.Gamma((byte[])filter.Value);
-                            break;
-
-                        case Filters.Hue:
-                            pixel = pixel.Hue((double)filter.Value);
-                            break;
-
-                        case Filters.Invert:
-                            pixel = pixel.Invert();
-                            break;
-
-                        case Filters.Noise:
-                            pixel = pixel.Noise((double)filter.Value);
-                            break;
-
-                        case Filters.Saturation:
-                            pixel = pixel.Saturation((double[])filter.Value);
-                            break;
-
-                        case Filters.Sepia:
-                            pixel = pixel.Sepia((double)filter.Value);
-                            break;
-
-                        case Filters.Tint:
-                            pixel = pixel.Tint((HexColor)filter.Value);
-                            break;
-
-                        case Filters.Vibrance:
-                            pixel = pixel.Vibrance((double)filter.Value);
-                            break;
-                    }
-                }
-
-                return pixel;
-            });
+            return this;
         }
 
         public Darkroom Reset()
