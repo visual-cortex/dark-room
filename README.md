@@ -38,6 +38,16 @@ Client-side. Server-side.
   // Output: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEA...
 ```
 
+### Convert back to an image (useful when recieving data server-side)
+
+```csharp
+  var img = new Negative("sample.jpg");
+  
+  DataUri digital = img.Digitize();
+  
+  Negative convertedImg = digital.ToNegative();
+```
+
 ### Pixel-wise comparison:
 
 ```csharp
