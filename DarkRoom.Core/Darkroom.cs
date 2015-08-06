@@ -331,7 +331,6 @@ namespace DarkRoom.Core
 
         public void Dispose()
         {
-            //_original.Dispose();
             _internal.Dispose();
             appliedFilters.Clear();
         }
