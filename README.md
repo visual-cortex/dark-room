@@ -1,4 +1,5 @@
 # Darkroom editor
+![Darkroom](https://media.licdn.com/mpr/mpr/jc/AAEAAQAAAAAAAANMAAAAJGIzNzRjYmU4LTFhMzUtNGI2ZS04NjI1LTE0ZDQzY2M2Zjk1MA.jpg)
 
 Image handling made easy.
 
