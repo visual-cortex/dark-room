@@ -13,8 +13,8 @@ namespace DarkRoom.Example
         static void Main(string[] args)
         {
             Stopwatch cropTimer = Stopwatch.StartNew();
-
-            Negative img = new Negative("sample.jpg", 1280, 720)
+            var imageUri = new Uri("http://static.cdprojektred.com/thewitcher.com/media/wallpapers/witcher3/full/witcher3_en_wallpaper_hearts_of_stone_olgierd_2560x1600_1446735934.png");
+            Negative img = new Negative(imageUri, 1280, 720)
                                        .Cut(560, 0, 720, 720);
             cropTimer.Stop();
             Console.WriteLine("Resized and cropped: {0} seconds", cropTimer.Elapsed.TotalSeconds);
@@ -34,7 +34,7 @@ namespace DarkRoom.Example
                     .Noise(25)
                     .Sepia()
                     .Hue(45)
-                    .Tint("#efefef")
+                    .Tint("#F44336")
                     .Wash()
                     .Develop(string.Format(@"{0}.jpg", Environment.TickCount));
             }
